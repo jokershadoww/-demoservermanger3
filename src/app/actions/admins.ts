@@ -3,7 +3,7 @@
  import { adminAuth } from '@/lib/firebase';
  import { revalidatePath } from 'next/cache';
  import { cookies } from 'next/headers';
- import type { UserRecord } from 'firebase-admin/auth';
+ import type { UserRecord, ListUsersResult } from 'firebase-admin/auth';
  
 export async function updateAdmin(prevState: any, formData: FormData) {
   const cookieStore = await cookies();
@@ -30,7 +30,7 @@ export async function updateAdmin(prevState: any, formData: FormData) {
       const emailLower = emailNew.toLowerCase();
       let pageToken: string | undefined = undefined;
       do {
-        const res = await adminAuth.listUsers(1000, pageToken);
+        const res: ListUsersResult = await adminAuth.listUsers(1000, pageToken);
         for (const u of res.users) {
           const claims = (u.customClaims || {}) as Record<string, any>;
           const role = claims.role as string | undefined;
@@ -41,7 +41,7 @@ export async function updateAdmin(prevState: any, formData: FormData) {
             await adminAuth.setCustomUserClaims(u.uid, newClaims);
           }
         }
-        pageToken = (res as any).pageToken;
+        pageToken = res.pageToken;
       } while (pageToken);
     }
     revalidatePath('/super-admin');
@@ -118,7 +118,7 @@ export async function disableAdmin(prevState: any, formData: FormData) {
     try {
       let pageToken: string | undefined = undefined;
       do {
-        const res = await adminAuth.listUsers(1000, pageToken);
+        const res: ListUsersResult = await adminAuth.listUsers(1000, pageToken);
         const users = res.users;
         for (const u of users) {
           const claims = (u.customClaims || {}) as Record<string, any>;
@@ -130,7 +130,7 @@ export async function disableAdmin(prevState: any, formData: FormData) {
             }
           }
         }
-        pageToken = (res as any).pageToken;
+        pageToken = res.pageToken;
       } while (pageToken);
     } catch {}
     revalidatePath('/super-admin');
@@ -174,7 +174,7 @@ export async function enableAdmin(prevState: any, formData: FormData) {
     try {
       let pageToken: string | undefined = undefined;
       do {
-        const res = await adminAuth.listUsers(1000, pageToken);
+        const res: ListUsersResult = await adminAuth.listUsers(1000, pageToken);
         const users = res.users;
         for (const u of users) {
           const claims = (u.customClaims || {}) as Record<string, any>;
@@ -194,7 +194,7 @@ export async function enableAdmin(prevState: any, formData: FormData) {
             await adminAuth.setCustomUserClaims(u.uid, newClaims);
           }
         }
-        pageToken = (res as any).pageToken;
+        pageToken = res.pageToken;
       } while (pageToken);
     } catch {}
     revalidatePath('/super-admin');

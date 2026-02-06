@@ -2,7 +2,8 @@
  
  import { cookies } from 'next/headers'
  import { revalidatePath } from 'next/cache'
- import { adminAuth } from '@/lib/firebase'
+import { adminAuth } from '@/lib/firebase'
+import type { ListUsersResult } from 'firebase-admin/auth'
  
  export async function autoFixAction(prevState: any, formData: FormData) {
    const cookieStore = await cookies()
@@ -13,9 +14,9 @@
    }
    try {
      let pageToken: string | undefined = undefined
-     do {
-       const res = await adminAuth.listUsers(1000, pageToken)
-       for (const u of res.users) {
+    do {
+      const res: ListUsersResult = await adminAuth.listUsers(1000, pageToken)
+      for (const u of res.users) {
          const claims = (u.customClaims || {}) as Record<string, any>
          const roleU = claims.role as string | undefined
          if (roleU === 'player' || roleU === 'coordinator') {
@@ -51,7 +52,7 @@
            }
          }
        }
-       pageToken = (res as any).pageToken
+      pageToken = res.pageToken
      } while (pageToken)
  
      const paths = [
